@@ -1,147 +1,338 @@
+package qqmusic_bridge
 
-// -----------------
-// 以下接口便于 C#/C++ 桥接调用（见 //export 指令）。
-// 使用时直接通过Cgo进行导出调用。
-// 场景示例：桌面端工具用此桥接访问QQ音乐相关能力。
-// 若算法较复杂则标注 TODO，并给参考开源实现库。已就绪接口直接实现。接口如无具体实现仅作包装，供快速原型与自动化测试。
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"time"
+)
 
-//export QQMusicLogin_QRGetKey
-// QQMusicLogin_QRGetKey 获取QQ音乐扫码登录的二维码Key（二维码内容即此Key拼装URL）。
-// 参数: 无
-// 返回: 字符串（二维码Key）
-// 桥接典型场景：桌面/移动端扫码登录流程拉起。
-// 参考: https://github.com/xcsoft/qqmusic-api/blob/master/server/login.js
-func QQMusicLogin_QRGetKey() string {
-	// TODO: 实现二维码Key获取（如调用qqmusic-api或逆向API）
-	return ""
-}
-
-//export QQMusicLogin_QRCheckStatus
-// QQMusicLogin_QRCheckStatus 查询扫码登录状态。
-// 参数: key字符串
-// 返回: 状态枚举或json字符串
-// 场景：轮询/回调通知扫码-确认-登录有效过程。
-// 参考: https://github.com/xcsoft/qqmusic-api/blob/master/server/login.js
-func QQMusicLogin_QRCheckStatus(key string) string {
-	// TODO: 实现登录状态检测
-	return ""
-}
-
-//export QQMusicGetPlaylist
-// QQMusicGetPlaylist 获取当前账号歌单列表。
-// 参数: 用户凭证token等
-// 返回: 歌单概要列表(json)
-// 用例：获取用户歌单用于展示或批量管理。
-// 参考: https://github.com/xcsoft/qqmusic-api/tree/master/server/playlist.js
-func QQMusicGetPlaylist(token string) string {
-	// TODO: 拉取歌单列表
-	return ""
-}
-
-//export QQMusicGetPlaylistDetail
-// QQMusicGetPlaylistDetail 获取指定歌单详情。
-// 参数: playlistId 字符串
-// 返回: 歌单详情(json)
-// 用例：展示歌单内容，为本地缓存列表。
-// 参考: https://github.com/xcsoft/qqmusic-api/tree/master/server/playlist.js
-func QQMusicGetPlaylistDetail(playlistId string) string {
-	// TODO: 拉取歌单具体条目
-	return ""
-}
-
-//export QQMusicGetAlbumInfo
-// QQMusicGetAlbumInfo 获取专辑详细信息。
-// 参数: albumId 字符串
-// 返回: 专辑详情(json)
-// 用例：展示专辑信息页。
-func QQMusicGetAlbumInfo(albumId string) string {
-	// TODO: 拉取专辑详细资料
-	return ""
-}
-
-//export QQMusicGetMVInfo
-// QQMusicGetMVInfo 获取MV相关信息。
-// 参数: mvId 字符串
-// 返回: MV详情(json)
-// 用例：音乐视频播放界面。
-func QQMusicGetMVInfo(mvId string) string {
-	// TODO: 拉取MV详情
-	return ""
-}
-
-//export QQMusicGetLyricTranslate
-// QQMusicGetLyricTranslate 获取歌词及翻译文本。
-// 参数: songId 字符串
-// 返回: 含原文和翻译的歌词json
-// 用例：歌词显示/滚动歌词同步翻译。
-// 参考: https://github.com/xcsoft/qqmusic-api/blob/master/server/lyric.js
-func QQMusicGetLyricTranslate(songId string) string {
-	// TODO: 拉取歌词和翻译
-	return ""
-}
-
-//export QQMusicGetHighQualityVkey
-// QQMusicGetHighQualityVkey 获取高清音频资源的访问Vkey。
-// 参数: songId/trackId等
-// 返回: vkey字符串，或带下载链接的json
-// 用例：高品质音频直链
-// 参考: https://github.com/xcsoft/qqmusic-api/blob/master/server/song.js
-func QQMusicGetHighQualityVkey(songId string) string {
-	// TODO: 获取vkey及音质链接
-	return ""
-}
-
-//export QQMusicGenCoverURL
-// QQMusicGenCoverURL 生成封面图片URL（专辑/歌单/用户头像等）。
-// 参数: contentId 字符串, contentType 类型（album/playlist/user/profile）
-// 返回: 封面图片URL
-// 用例：图片展示（头像、专辑、歌单封面等）
-func QQMusicGenCoverURL(contentId string, contentType string) string {
-	// 可直接拼接静态格式，部分本地或缓存形式特殊处理
-	return "https://y.gtimg.cn/music/photo_new/T" + contentType + "_mask_300/" + contentId + ".jpg"
-}
-
-//export QQMusicSearchSinger
-// QQMusicSearchSinger 按关键词搜索歌手。
-// 参数: keyword 字符串
-// 返回: 歌手搜索结果(json)
-// 用例：搜索框建议、创建收藏时选择歌手。
-// 参考: https://github.com/xcsoft/qqmusic-api/blob/master/server/search.js
-func QQMusicSearchSinger(keyword string) string {
-	// TODO: 搜索歌手并返回结果
-	return ""
-}
-
-//export QQMusicSearchAlbum
-// QQMusicSearchAlbum 按关键词搜索专辑。
-// 参数: keyword 字符串
-// 返回: 专辑搜索结果(json)
-// 用例：用户浏览专辑、添加到歌单。
-func QQMusicSearchAlbum(keyword string) string {
-	// TODO: 搜索专辑
-	return ""
-}
-
-//export QQMusicSearchMV
-// QQMusicSearchMV 按关键词搜索MV。
-// 参数: keyword 字符串
-// 返回: MV结果(json)
-func QQMusicSearchMV(keyword string) string {
-	// TODO: 搜索MV
-	return ""
-}
-
-//export QQMusicGetUserInfo
-// QQMusicGetUserInfo 获取当前(或指定)用户公开信息。
-// 参数: token(可选)或用户ID
-// 返回: 用户基础信息
-// 用例：登录态检测、主界面头像与昵称等展示。
-// 参考: https://github.com/xcsoft/qqmusic-api/blob/master/server/user.js
-func QQMusicGetUserInfo(token string) string {
-	// TODO: 拉取用户基础公开信息
-	return ""
-}
+// QQMusicAPIResponse 定义标准返回格式
+// QQ音乐通用API响应结构体，用于统一返回结果
+// 业务数据一般存放在 Data 字段
+// Code 表示响应码，Message 返回提示
+// 非零 Code 需特殊处理
 //
-// 以上接口均为Cgo友好导出形式，建议配合 json 字符串在C#/C++侧解析封装数据结构。
-// 实现可对接 https://github.com/xcsoft/qqmusic-api 方案，亦可使用社区协议逆向方案补齐具体细节。
-// 若需扩展支持多端/多账号/自动缓存，接口形态不变实现细节可用go routine或cache层优化。
+type QQMusicAPIResponse struct {
+	Code    int         `json:"code"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data,omitempty"`
+}
+
+// Playlist 歌单基本信息
+// 用于 QQMusicGetPlaylist / QQMusicGetPlaylistDetail 返回
+// 歌曲列表 SongList 需单独查询
+//
+type Playlist struct {
+	ID        string   `json:"id"`
+	Title     string   `json:"title"`
+	CoverURL  string   `json:"cover_url"`
+	Desc      string   `json:"desc"`
+	SongCount int      `json:"song_count"`
+	SongList  []Song   `json:"song_list,omitempty"`
+	Creator   string   `json:"creator"`
+	Tags      []string `json:"tags"`
+}
+
+// Song 歌曲信息
+// 用于通用歌曲返回
+//
+type Song struct {
+	ID        string   `json:"id"`
+	Name      string   `json:"name"`
+	Album     Album    `json:"album"`
+	Artists   []Singer `json:"artists"`
+	Duration  int      `json:"duration"`
+	CoverURL  string   `json:"cover_url"`
+	URL       string   `json:"url,omitempty"`
+	Copyright string   `json:"copyright,omitempty"`
+}
+
+// Album 专辑基本信息
+//
+type Album struct {
+	ID    string `json:"id"`
+	Name  string `json:"name"`
+	Cover string `json:"cover"`
+}
+
+// MV MV结构体
+//
+type MV struct {
+	ID    string `json:"id"`
+	Title string `json:"title"`
+}
+
+// Singer 歌手信息
+//
+type Singer struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+// ========================= 主要对外接口实现 =========================
+
+// QQMusicLogin_QRGetKey 获取QQ音乐扫码登录二维码key及图片
+// 业务流程：向 QQ音乐API 发送请求，生成可用于扫码登录的 key，并生成二维码（base64/png）
+// 参数说明：无（部分实现可能需cookie，仅匿名尝试即可）
+// 返回：二维码 key、二维码图片（base64/png）、过期时间等错误
+func QQMusicLogin_QRGetKey() (key string, qrImageBase64 string, expireAt int64, err error) {
+	// TODO: 如果官方API稳定，可实现改为更高可靠请求。
+	client := http.Client{Timeout: 5 * time.Second}
+	resp, err := client.Get("https://ssl.hwui.top/api/qqmusic/qrkey") // 示例api，实际需替换生产可用
+	if err != nil {
+		return "", "", 0, err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", "", 0, err
+	}
+	type qrResp struct {
+		Code int    `json:"code"`
+		Key  string `json:"key"`
+		Img  string `json:"img"`
+		Exp  int64  `json:"expire_at"`
+	}
+	var qr qrResp
+	err = json.Unmarshal(body, &qr)
+	if err != nil || qr.Code != 0 {
+		return "", "", 0, errors.New("二维码获取失败")
+	}
+	return qr.Key, qr.Img, qr.Exp, nil
+}
+
+// QQMusicLogin_QRCheckStatus 轮询二维码扫码状态
+// 业务流程：周期请求对应key状态，返回扫码结果，如uin、token、cookie、状态码
+// 参数说明：key string，二维码对应值
+// 返回：uin、cookie、token、状态码、错误提示等
+func QQMusicLogin_QRCheckStatus(key string) (uin string, cookie string, token string, status int, err error) {
+	client := http.Client{Timeout: 5 * time.Second}
+	postbody := map[string]string{"key": key}
+	bs, _ := json.Marshal(postbody)
+	resp, err := client.Post("https://ssl.hwui.top/api/qqmusic/qrstatus", "application/json", bytes.NewReader(bs))
+	if err != nil {
+		return "", "", "", -1, err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", "", "", -1, err
+	}
+	type statusResp struct {
+		Code   int    `json:"code"`
+		Uin    string `json:"uin"`
+		Token  string `json:"token"`
+		Cookie string `json:"cookie"`
+		Stat   int    `json:"status"` // 0未扫码/1已扫码/2授权成功/3二维码失效 etc
+	}
+	var sr statusResp
+	err = json.Unmarshal(body, &sr)
+	if err != nil {
+		return "", "", "", -1, err
+	}
+	if sr.Code != 0 {
+		return "", "", "", sr.Stat, errors.New("登录状态异常")
+	}
+	return sr.Uin, sr.Cookie, sr.Token, sr.Stat, nil
+}
+
+// QQMusicSearchSong 搜索单曲（标准json返回，支持cookie与完整API请求）
+// 业务流程：拼接参数，带cookie请求 QQ音乐搜索接口，解析返回歌曲列表结构
+// 参数说明：keyword 搜索关键字, page 页码, pageSize 每页数量, cookie 可选用户cookie
+// 返回：API标准结构体/错误
+func QQMusicSearchSong(keyword string, page int, pageSize int, cookie string) (QQMusicAPIResponse, error) {
+	url := fmt.Sprintf("https://c.y.qq.com/soso/fcgi-bin/client_search_cp?p=%d&n=%d&w=%s", page, pageSize, keyword)
+	req, _ := http.NewRequest("GET", url, nil)
+	if cookie != "" {
+		req.Header.Set("Cookie", cookie)
+	}
+	client := http.Client{Timeout: 5 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return QQMusicAPIResponse{Code: 500, Message: err.Error()}, err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return QQMusicAPIResponse{Code: 500, Message: err.Error()}, err
+	}
+	// TODO: 按需解析更多字段
+	return QQMusicAPIResponse{Code: 0, Message: "", Data: string(body)}, nil
+}
+
+// QQMusicGetLyric 获取歌词接口（支持cookie/VIP歌词）
+// 业务流程：带cookie拉取歌词接口，无用户则拉公开API。若VIP歌词遇到特殊授权失败应给出提示。
+// 参数说明：songmid 歌曲MID, cookie 用户cookie(可选)
+// 返回：API标准结构体/错误
+func QQMusicGetLyric(songmid string, cookie string) (QQMusicAPIResponse, error) {
+	url := fmt.Sprintf("https://c.y.qq.com/lyric/fcgi-bin/fcg_query_lyric_new.fcg?songmid=%s&format=json", songmid)
+	req, _ := http.NewRequest("GET", url, nil)
+	if cookie != "" {
+		req.Header.Set("Cookie", cookie)
+	}
+	client := http.Client{Timeout: 5 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return QQMusicAPIResponse{Code: 500, Message: err.Error()}, err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return QQMusicAPIResponse{Code: 500, Message: err.Error()}, err
+	}
+	return QQMusicAPIResponse{Code: 0, Message: "", Data: string(body)}, nil
+}
+
+// QQMusicGetSongURL 获取歌曲播放URL（带vkey高音质，失败Fallback开放接口）
+// 业务流程：生成with vkey的高音质播放链接，若不可用则请求开放接口fallback。
+// 参数说明：songmid 歌曲MID, cookie 用户cookie(可选)
+// 返回：播放url、错误
+func QQMusicGetSongURL(songmid string, cookie string) (url string, err error) {
+	// 官方协议需要uin与vkey，简易方案尝试第三方服务。
+	realurl := ""
+	// 首选推荐vkey 1080p接口
+	api1 := fmt.Sprintf("https://ssl.hwui.top/api/qqmusic/songurl?songmid=%s", songmid)
+	client := http.Client{Timeout: 5 * time.Second}
+	req, _ := http.NewRequest("GET", api1, nil)
+	if cookie != "" {
+		req.Header.Set("Cookie", cookie)
+	}
+	resp, err := client.Do(req)
+	if err == nil {
+		defer resp.Body.Close()
+		body, _ := ioutil.ReadAll(resp.Body)
+		type urlResp struct {
+			Code int    `json:"code"`
+			URL  string `json:"url"`
+		}
+		var ur urlResp
+		if json.Unmarshal(body, &ur) == nil && ur.Code == 0 && ur.URL != "" {
+			realurl = ur.URL
+		}
+	}
+	if realurl == "" {
+		// fallback开放接口（如网易云/其余镜像）
+		realurl = fmt.Sprintf("https://music.jsososo.com/api/qq/track/url?id=%s&type=320", songmid)
+	}
+	return realurl, nil
+}
+
+// QQMusicGetPlaylist 获取歌单基础信息
+// 业务流程：拉QQ音乐主流歌单接口并解析，主流歌单下歌曲需用GetPlaylistDetail二次请求
+// 参数说明：playlistID 歌单ID, cookie 用户cookie(可选)
+// 返回：Playlist结构体/错误
+func QQMusicGetPlaylist(playlistID string, cookie string) (Playlist, error) {
+	url := fmt.Sprintf("https://c.y.qq.com/qzone/fcg-bin/fcg_ucc_getcdinfo_byids_cp.fcg?type=1&disstid=%s&format=json", playlistID)
+	req, _ := http.NewRequest("GET", url, nil)
+	if cookie != "" {
+		req.Header.Set("Cookie", cookie)
+	}
+	client := http.Client{Timeout: 5 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return Playlist{}, err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return Playlist{}, err
+	}
+	// TODO: 解析更多歌单字段
+	var respmap map[string]interface{}
+	err = json.Unmarshal(body, &respmap)
+	if err != nil {
+		return Playlist{}, err
+	}
+	// 仅解析基础
+	cdlist, ok := respmap["cdlist"].([]interface{})
+	if !ok || len(cdlist) == 0 {
+		return Playlist{}, errors.New("暂未查到歌单信息")
+	}
+	main := cdlist[0].(map[string]interface{})
+	playlist := Playlist{
+		ID:        fmt.Sprintf("%v", main["disstid"]),
+		Title:     fmt.Sprintf("%v", main["dissname"]),
+		CoverURL:  fmt.Sprintf("%v", main["logo"]),
+		Desc:      fmt.Sprintf("%v", main["desc"]),
+		SongCount: int(main["songnum"].(float64)),
+		Creator:   fmt.Sprintf("%v", main["creator"]),
+	}
+	return playlist, nil
+}
+
+// QQMusicGetPlaylistDetail 获取歌单详情(含歌曲)
+// 业务流程：拉取歌单基本+歌曲列表，支持cookie
+// 参数说明：playlistID 歌单ID, cookie 用户cookie(可选)
+// 返回：Playlist完整结构体/错误
+func QQMusicGetPlaylistDetail(playlistID string, cookie string) (Playlist, error) {
+	basic, err := QQMusicGetPlaylist(playlistID, cookie)
+	if err != nil {
+		return Playlist{}, err
+	}
+	url := fmt.Sprintf("https://c.y.qq.com/qzone/fcg-bin/fcg_ucc_getcdinfo_byids_cp.fcg?type=1&disstid=%s&format=json", playlistID)
+	req, _ := http.NewRequest("GET", url, nil)
+	if cookie != "" {
+		req.Header.Set("Cookie", cookie)
+	}
+	client := http.Client{Timeout: 5 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return Playlist{}, err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return Playlist{}, err
+	}
+	var respmap map[string]interface{}
+	err = json.Unmarshal(body, &respmap)
+	if err != nil {
+		return Playlist{}, err
+	}
+	cdlist, ok := respmap["cdlist"].([]interface{})
+	if !ok || len(cdlist) == 0 {
+		return Playlist{}, errors.New("未查到歌单详情")
+	}
+	main := cdlist[0].(map[string]interface{})
+	songs := []Song{}
+	if songlist, ok := main["songlist"].([]interface{}); ok {
+		for _, s := range songlist {
+			ss := s.(map[string]interface{})
+			// 解析歌曲基本字段
+			id := fmt.Sprintf("%v", ss["songmid"])
+			name := fmt.Sprintf("%v", ss["songname"])
+			album := Album{
+				ID:    fmt.Sprintf("%v", ss["albummid"]),
+				Name:  fmt.Sprintf("%v", ss["albumname"]),
+				Cover: fmt.Sprintf("https://y.gtimg.cn/music/photo_new/T002R300x300M000%v.jpg", ss["albummid"]),
+			}
+			artists := []Singer{}
+			if ss["singer"] != nil {
+				for _, sinfo := range ss["singer"].([]interface{}) {
+					sm := sinfo.(map[string]interface{})
+					artists = append(artists, Singer{
+						ID:   fmt.Sprintf("%v", sm["mid"]),
+						Name: fmt.Sprintf("%v", sm["name"]),
+					})
+				}
+			}
+			duration := 0
+			if dur, ok := ss["interval"]; ok { duration = int(dur.(float64)) }
+			cover := album.Cover
+			songs = append(songs, Song{
+				ID:       id,
+				Name:     name,
+				Album:    album,
+				Artists:  artists,
+				Duration: duration,
+				CoverURL: cover,
+			})
+		}
+	}
+	basic.SongList = songs
+	return basic, nil
+}
