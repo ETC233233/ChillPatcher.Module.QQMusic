@@ -1,0 +1,1 @@
+# ChillPatcher.Module.QQMusic
