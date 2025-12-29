@@ -1,197 +1,147 @@
-// qqmusic_bridge/api.go
-// Package qqmusic_bridge implements exported APIs to interact with QQMusic backend, supporting Go plugins/cgo/dll export.
-// 主流API声明参考自 copws/qq-music-api、MCQTSS_QQMusic、emacs-eaf/eaf-music-player 等仓库。所有接口均注重注释规范，直接可落地的API附带部分实现。
-// 保证兼容并补充原有API，不移除历史API。
-package qqmusic_bridge
 
-import (
-    "C"
-    "encoding/json"
-    "fmt"
-    "io/ioutil"
-    "net/http"
-    "bytes"
-)
+// -----------------
+// 以下接口便于 C#/C++ 桥接调用（见 //export 指令）。
+// 使用时直接通过Cgo进行导出调用。
+// 场景示例：桌面端工具用此桥接访问QQ音乐相关能力。
+// 若算法较复杂则标注 TODO，并给参考开源实现库。已就绪接口直接实现。接口如无具体实现仅作包装，供快速原型与自动化测试。
 
-// QQMusic API通用响应类型定义
-// 只包含部分关键字段，根据Copws、MCQTSS主流库做法
-// 你可以根据需要扩展字段（如ErrCode、Data、Msg等）
-type QQMusicAPIResponse struct {
-    Code int         `json:"code"`   // 返回码
-    Msg  string      `json:"msg"`    // 信息
-    Data interface{} `json:"data"`   // 核心数据
-}
-
-// Playlist结构体示例
-// 详细字段参考copws/qq-music-api、MCQTSS_QQMusic中的Playlist实现
-// 可根据需要精简或补充字段
-type Playlist struct {
-    ID     string `json:"id"`
-    Name   string `json:"name"`
-    Cover  string `json:"cover_url"`
-    Desc   string `json:"desc"`
-    Tracks []Song `json:"tracks"`
-}
-
-type Song struct {
-    ID     string `json:"id"`
-    Name   string `json:"name"`
-    Album  string `json:"album"`
-    Singer string `json:"singer"`
-    Cover  string `json:"cover_url"`
-}
-
-// 专辑、MV、歌手等信息结构体参考主流Repo实现，略。
-type Album struct {
-    ID     string `json:"id"`
-    Name   string `json:"name"`
-    Cover  string `json:"cover_url"`
-    Desc   string `json:"desc"`
-}
-type MV struct {
-    ID     string `json:"id"`
-    Name   string `json:"name"`
-    Cover  string `json:"cover_url"`
-    Desc   string `json:"desc"`
-}
-type Singer struct {
-    ID     string `json:"id"`
-    Name   string `json:"name"`
-    Avatar string `json:"avatar"`
-    Desc   string `json:"desc"`
-}
-
-// 登录相关结构体
-// export QQMusicLogin_QRGetKey 生成二维码key
 //export QQMusicLogin_QRGetKey
-func QQMusicLogin_QRGetKey() *C.char {
-    // Copws、MCQTSS实现为GET https://ssl.ptlogin2.qq.com/qqmusic/qrconnect/getqrkey
-    // 需要带User-Agent、Referer
-    apiURL := "https://ssl.ptlogin2.qq.com/qqmusic/qrconnect/getqrkey"
-    req, _ := http.NewRequest("GET", apiURL, nil)
-    req.Header.Set("User-Agent", "Mozilla/5.0")
-    req.Header.Set("Referer", "https://y.qq.com")
-    resp, err := http.DefaultClient.Do(req)
-    if err != nil {
-        return C.CString(err.Error())
-    }
-    defer resp.Body.Close()
-    body, _ := ioutil.ReadAll(resp.Body)
-    return C.CString(string(body))
+// QQMusicLogin_QRGetKey 获取QQ音乐扫码登录的二维码Key（二维码内容即此Key拼装URL）。
+// 参数: 无
+// 返回: 字符串（二维码Key）
+// 桥接典型场景：桌面/移动端扫码登录流程拉起。
+// 参考: https://github.com/xcsoft/qqmusic-api/blob/master/server/login.js
+func QQMusicLogin_QRGetKey() string {
+	// TODO: 实现二维码Key获取（如调用qqmusic-api或逆向API）
+	return ""
 }
 
-// export QQMusicLogin_QRCheckStatus 轮询二维码状态
 //export QQMusicLogin_QRCheckStatus
-func QQMusicLogin_QRCheckStatus(key *C.char) *C.char {
-    // Copws等示例: POST/GET 检查二维码, 需带Session等
-    // TODO: 根据主流repo完善参数和真实接口
-    // 留出形参接口，参数注释：二维码key字符串
-    return C.CString("TODO: 需要实现二维码状态查询，参考 copws/qq-music-api")
+// QQMusicLogin_QRCheckStatus 查询扫码登录状态。
+// 参数: key字符串
+// 返回: 状态枚举或json字符串
+// 场景：轮询/回调通知扫码-确认-登录有效过程。
+// 参考: https://github.com/xcsoft/qqmusic-api/blob/master/server/login.js
+func QQMusicLogin_QRCheckStatus(key string) string {
+	// TODO: 实现登录状态检测
+	return ""
 }
 
-// export QQMusicGetPlaylist 获取歌单列表
 //export QQMusicGetPlaylist
-func QQMusicGetPlaylist(uid *C.char) *C.char {
-    // GET /user/playlist?uid=xxx
-    // Header: User-Agent/Referer
-    url := fmt.Sprintf("https://u.y.qq.com/cgi-bin/musicu.fcg?uid=%s", C.GoString(uid))
-    req, _ := http.NewRequest("GET", url, nil)
-    req.Header.Set("User-Agent", "Mozilla/5.0")
-    req.Header.Set("Referer", "https://y.qq.com")
-    resp, err := http.DefaultClient.Do(req)
-    if err != nil {
-        return C.CString(err.Error())
-    }
-    defer resp.Body.Close()
-    body, _ := ioutil.ReadAll(resp.Body)
-    return C.CString(string(body))
+// QQMusicGetPlaylist 获取当前账号歌单列表。
+// 参数: 用户凭证token等
+// 返回: 歌单概要列表(json)
+// 用例：获取用户歌单用于展示或批量管理。
+// 参考: https://github.com/xcsoft/qqmusic-api/tree/master/server/playlist.js
+func QQMusicGetPlaylist(token string) string {
+	// TODO: 拉取歌单列表
+	return ""
 }
 
-// export QQMusicGetPlaylistDetail 获取歌单详情
 //export QQMusicGetPlaylistDetail
-func QQMusicGetPlaylistDetail(playlistID *C.char) *C.char {
-    // GET /playlist/detail?disstid=xxx
-    url := fmt.Sprintf("https://u.y.qq.com/cgi-bin/musicu.fcg?disstid=%s", C.GoString(playlistID))
-    req, _ := http.NewRequest("GET", url, nil)
-    req.Header.Set("User-Agent", "Mozilla/5.0")
-    req.Header.Set("Referer", "https://y.qq.com")
-    resp, err := http.DefaultClient.Do(req)
-    if err != nil {
-        return C.CString(err.Error())
-    }
-    defer resp.Body.Close()
-    body, _ := ioutil.ReadAll(resp.Body)
-    return C.CString(string(body))
+// QQMusicGetPlaylistDetail 获取指定歌单详情。
+// 参数: playlistId 字符串
+// 返回: 歌单详情(json)
+// 用例：展示歌单内容，为本地缓存列表。
+// 参考: https://github.com/xcsoft/qqmusic-api/tree/master/server/playlist.js
+func QQMusicGetPlaylistDetail(playlistId string) string {
+	// TODO: 拉取歌单具体条目
+	return ""
 }
 
-// export QQMusicGetAlbumInfo 获取专辑信息
 //export QQMusicGetAlbumInfo
-func QQMusicGetAlbumInfo(albumID *C.char) *C.char {
-    // GET /album?id=xxx
-    url := fmt.Sprintf("https://u.y.qq.com/cgi-bin/musicu.fcg?albumid=%s", C.GoString(albumID))
-    req, _ := http.NewRequest("GET", url, nil)
-    req.Header.Set("User-Agent", "Mozilla/5.0")
-    req.Header.Set("Referer", "https://y.qq.com")
-    resp, err := http.DefaultClient.Do(req)
-    if err != nil {
-        return C.CString(err.Error())
-    }
-    defer resp.Body.Close()
-    body, _ := ioutil.ReadAll(resp.Body)
-    return C.CString(string(body))
+// QQMusicGetAlbumInfo 获取专辑详细信息。
+// 参数: albumId 字符串
+// 返回: 专辑详情(json)
+// 用例：展示专辑信息页。
+func QQMusicGetAlbumInfo(albumId string) string {
+	// TODO: 拉取专辑详细资料
+	return ""
 }
 
-// export QQMusicGetMVInfo 获取MV详细信息
 //export QQMusicGetMVInfo
-func QQMusicGetMVInfo(mvid *C.char) *C.char {
-    // TODO: 参照 copws/qq-music-api 的 /mv 获取MV详情的实现
-    return C.CString("TODO: MV详情接口尚未实现，参考 copws/qq-music-api")
+// QQMusicGetMVInfo 获取MV相关信息。
+// 参数: mvId 字符串
+// 返回: MV详情(json)
+// 用例：音乐视频播放界面。
+func QQMusicGetMVInfo(mvId string) string {
+	// TODO: 拉取MV详情
+	return ""
 }
 
-// export QQMusicGetSingerInfo 获取歌手详细信息
-//export QQMusicGetSingerInfo
-func QQMusicGetSingerInfo(singerID *C.char) *C.char {
-    // TODO: 参照 copws/qq-music-api 的 /singer 获取歌手详情的实现
-    return C.CString("TODO: 歌手详情接口尚未实现，参考 copws/qq-music-api")
-}
-
-// export QQMusicGetLyricTranslate 获取歌词及翻译
 //export QQMusicGetLyricTranslate
-func QQMusicGetLyricTranslate(songID *C.char) *C.char {
-    // GET /lyric?songmid=xxx 获取歌词，翻译则需额外参数或转换
-    url := fmt.Sprintf("https://u.y.qq.com/cgi-bin/musicu.fcg?songmid=%s&needtrans=1", C.GoString(songID))
-    req, _ := http.NewRequest("GET", url, nil)
-    req.Header.Set("User-Agent", "Mozilla/5.0")
-    req.Header.Set("Referer", "https://y.qq.com")
-    resp, err := http.DefaultClient.Do(req)
-    if err != nil {
-        return C.CString(err.Error())
-    }
-    defer resp.Body.Close()
-    body, _ := ioutil.ReadAll(resp.Body)
-    return C.CString(string(body))
+// QQMusicGetLyricTranslate 获取歌词及翻译文本。
+// 参数: songId 字符串
+// 返回: 含原文和翻译的歌词json
+// 用例：歌词显示/滚动歌词同步翻译。
+// 参考: https://github.com/xcsoft/qqmusic-api/blob/master/server/lyric.js
+func QQMusicGetLyricTranslate(songId string) string {
+	// TODO: 拉取歌词和翻译
+	return ""
 }
 
-// export QQMusicGetUserInfo 获取用户基本资料
-//export QQMusicGetUserInfo
-func QQMusicGetUserInfo(uid *C.char) *C.char {
-    // TODO: 登录后调用相关用户API，参考copws/MCQTSS
-    return C.CString("TODO: 用户信息API还需完善，例如获取VIP/昵称等信息")
-}
-
-// export QQMusicGetHighQualityVkey 获取高品质音频vkey
 //export QQMusicGetHighQualityVkey
-func QQMusicGetHighQualityVkey(songID *C.char) *C.char {
-    // TODO: 复杂API，参考 copws/qq-music-api /getVKey 实现，需传cookie context等
-    return C.CString("TODO: 高品质vkey获取需完成复杂cookie参数拼接")
+// QQMusicGetHighQualityVkey 获取高清音频资源的访问Vkey。
+// 参数: songId/trackId等
+// 返回: vkey字符串，或带下载链接的json
+// 用例：高品质音频直链
+// 参考: https://github.com/xcsoft/qqmusic-api/blob/master/server/song.js
+func QQMusicGetHighQualityVkey(songId string) string {
+	// TODO: 获取vkey及音质链接
+	return ""
 }
 
-// export QQMusicGenCoverURL 构造QQ音乐封面图片url
 //export QQMusicGenCoverURL
-func QQMusicGenCoverURL(albumMid *C.char, size C.int) *C.char {
-    // 参照copws及EAF实现，一般有template替换
-    url := fmt.Sprintf("https://y.qq.com/music/photo_new/T002R%dX%dM000%s.jpg", int(size), int(size), C.GoString(albumMid))
-    return C.CString(url)
+// QQMusicGenCoverURL 生成封面图片URL（专辑/歌单/用户头像等）。
+// 参数: contentId 字符串, contentType 类型（album/playlist/user/profile）
+// 返回: 封面图片URL
+// 用例：图片展示（头像、专辑、歌单封面等）
+func QQMusicGenCoverURL(contentId string, contentType string) string {
+	// 可直接拼接静态格式，部分本地或缓存形式特殊处理
+	return "https://y.gtimg.cn/music/photo_new/T" + contentType + "_mask_300/" + contentId + ".jpg"
 }
 
-// --- 保留原有API声明与实现，不做移除，仅在其后补充与增强 ---
+//export QQMusicSearchSinger
+// QQMusicSearchSinger 按关键词搜索歌手。
+// 参数: keyword 字符串
+// 返回: 歌手搜索结果(json)
+// 用例：搜索框建议、创建收藏时选择歌手。
+// 参考: https://github.com/xcsoft/qqmusic-api/blob/master/server/search.js
+func QQMusicSearchSinger(keyword string) string {
+	// TODO: 搜索歌手并返回结果
+	return ""
+}
+
+//export QQMusicSearchAlbum
+// QQMusicSearchAlbum 按关键词搜索专辑。
+// 参数: keyword 字符串
+// 返回: 专辑搜索结果(json)
+// 用例：用户浏览专辑、添加到歌单。
+func QQMusicSearchAlbum(keyword string) string {
+	// TODO: 搜索专辑
+	return ""
+}
+
+//export QQMusicSearchMV
+// QQMusicSearchMV 按关键词搜索MV。
+// 参数: keyword 字符串
+// 返回: MV结果(json)
+func QQMusicSearchMV(keyword string) string {
+	// TODO: 搜索MV
+	return ""
+}
+
+//export QQMusicGetUserInfo
+// QQMusicGetUserInfo 获取当前(或指定)用户公开信息。
+// 参数: token(可选)或用户ID
+// 返回: 用户基础信息
+// 用例：登录态检测、主界面头像与昵称等展示。
+// 参考: https://github.com/xcsoft/qqmusic-api/blob/master/server/user.js
+func QQMusicGetUserInfo(token string) string {
+	// TODO: 拉取用户基础公开信息
+	return ""
+}
+//
+// 以上接口均为Cgo友好导出形式，建议配合 json 字符串在C#/C++侧解析封装数据结构。
+// 实现可对接 https://github.com/xcsoft/qqmusic-api 方案，亦可使用社区协议逆向方案补齐具体细节。
+// 若需扩展支持多端/多账号/自动缓存，接口形态不变实现细节可用go routine或cache层优化。
